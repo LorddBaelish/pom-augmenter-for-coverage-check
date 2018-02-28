@@ -50,7 +50,7 @@ public class POMNodeProcess {
      * @param targetDOM POM file containing 'jacoco-maven-plugin' plugin
      * @throws Exception DOMException
      */
-    public static void addJacocoExecution(String sourceNodeTree, String targetDOM, String COVERAGE_THRESHOLD) throws Exception {
+    public static void addJacocoExecution(String sourceNodeTree, String targetDOM, String COVERAGE_THRESHOLD, String coveragePerParameter) throws Exception {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
@@ -62,6 +62,7 @@ public class POMNodeProcess {
 
         //Add line coverage threshold
         doc1.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(COVERAGE_THRESHOLD);
+        doc1.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerParameter);
 
         //Print results to console
         //prettyPrint(doc2);

@@ -42,7 +42,7 @@ public class JacocoLineCoverage {
      * @param pomFile           org.apache.maven.model.Model object corresponding to the pom file
      * @param coverageThreshold Jacoco line coverage threshold value to break the build
      */
-    public static boolean applyLineCoverageCheck(Model pomFile, String coverageThreshold) {
+    public static boolean applyLineCoverageCheck(Model pomFile, String coverageThreshold, String coveragePerParameter) {
 
         final Log log = LogFactory.getLog(Application.class);
 
@@ -81,7 +81,7 @@ public class JacocoLineCoverage {
                         log.info("adding default-check execution to the POM file");
                         String targetXmlPath = pomFile.getProjectDirectory().getAbsolutePath()+ File.separator + Constants.POM_NAME;
 
-                        POMNodeProcess.addJacocoExecution(Constants.DEFAULT_CHECK_XML_FILE, targetXmlPath, coverageThreshold);
+                        POMNodeProcess.addJacocoExecution(Constants.DEFAULT_CHECK_XML_FILE, targetXmlPath, coverageThreshold, coveragePerParameter);
 
                         return true;
                     }

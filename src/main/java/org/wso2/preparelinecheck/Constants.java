@@ -28,6 +28,7 @@ public class Constants {
     public static final String JACOCO_GOAL_COVERAGE_RULE_INVOKE = "check";
     public static final String JACOCO_PLUGIN_ARTIFACT_ID = "jacoco-maven-plugin";
     public static final String JACOCO_TAG_COVERAGE_CHECK_VALUE = "minimum";
+    public static final String JACOCO_TAG_COVERAGE_PER_ELEMENT = "element";
     public static final String MAVEN_TAG_PLUGIN = "plugin";
     public static final String MAVEN_TAG_ARTIFACT_ID = "artifactId";
     public static final String MAVEN_TAG_EXECUTIONS = "executions";

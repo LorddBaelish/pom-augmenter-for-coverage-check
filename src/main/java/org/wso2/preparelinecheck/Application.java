@@ -42,7 +42,7 @@ public class Application {
 
     /**
      * Main method
-     * @param args Path to the project, line coverage threshold
+     * @param args Path to the project, line coverage threshold, coverage per parameter(per BUNDLE, per CLASS etc)
      */
     public static void main(String[] args) {
 
@@ -51,7 +51,7 @@ public class Application {
 
             //Analyze parent POM
             log.info("Analyzing parent pom");
-            JacocoLineCoverage.applyLineCoverageCheck(parentPomModel, args[1]);
+            JacocoLineCoverage.applyLineCoverageCheck(parentPomModel, args[1], args[2]);
 
             //Load all child modules
             List<String> childPomList = parentPomModel.getModules();
@@ -63,7 +63,7 @@ public class Application {
                     Model childPomModel = POMReader.getPOMModel(args[0] + File.separator + eachModule);
 
                     log.info("Analyzing " + eachModule);
-                    JacocoLineCoverage.applyLineCoverageCheck(childPomModel, args[1]);
+                    JacocoLineCoverage.applyLineCoverageCheck(childPomModel, args[1], args[2]);
                 }
                 catch (FileNotFoundException e){
                     log.warn("skipping this module. POM file not found");
