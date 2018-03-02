@@ -52,11 +52,10 @@ public class JacocoLineCoverage {
         boolean JACOCO_PREPARE_AGENT_AVAILABLE = false;
         boolean JACOCO_DEFAULT_CHECK_RULE_PRESENT = false;
 
-
-         //Go through each plugin
+        //Go through each plugin
         for (Plugin plugin : plugins) {
 
-             //Check if jacoco maven plugin is present
+            //Check if jacoco maven plugin is present
             if (plugin.getArtifactId().equals(Constants.JACOCO_PLUGIN_ARTIFACT_ID)) {
 
                 //Check if prepare-agent execution step is present
@@ -66,7 +65,7 @@ public class JacocoLineCoverage {
                         log.info("Jacoco execution prepare-agent is available");
                         JACOCO_PREPARE_AGENT_AVAILABLE = true;
                     }
-                    if (execution.getGoals().contains(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE)){
+                    if (execution.getGoals().contains(Constants.JACOCO_GOAL_COVERAGE_RULE_INVOKE)) {
 
                         log.warn("default-check execution already applied");
                         JACOCO_DEFAULT_CHECK_RULE_PRESENT = true;
@@ -75,23 +74,23 @@ public class JacocoLineCoverage {
                 }
 
                 //Add line coverage check rule if prepare-agent is present
-                if(JACOCO_PREPARE_AGENT_AVAILABLE && (!JACOCO_DEFAULT_CHECK_RULE_PRESENT)){
-                    try{
+                if (JACOCO_PREPARE_AGENT_AVAILABLE && (!JACOCO_DEFAULT_CHECK_RULE_PRESENT)) {
+                    try {
 
                         log.info("adding default-check execution to the POM file");
-                        String targetXmlPath = pomFile.getProjectDirectory().getAbsolutePath()+ File.separator + Constants.POM_NAME;
+                        String targetXmlPath = pomFile.getProjectDirectory().getAbsolutePath() + File.separator + Constants.POM_NAME;
 
                         POMNodeProcess.addJacocoExecution(Constants.DEFAULT_CHECK_XML_FILE, targetXmlPath, coverageThreshold, coveragePerParameter);
 
                         return true;
-                    }
-                    catch (Exception e){
+                    } catch (Exception e) {
 
                         e.printStackTrace();
                     }
-                }
-                else{
-                    log.warn("Cannot apply line coverage check. Jacoco has not been invoked");
+                } else {
+                    if (!JACOCO_PREPARE_AGENT_AVAILABLE) {
+                        log.warn("Cannot apply line coverage check. Jacoco has not been invoked");
+                    }
                 }
             }
         }

@@ -20,6 +20,7 @@
 package org.wso2.preparelinecheck;
 
 public class Constants {
+
     public static final String POM_NAME = "pom.xml";
     public static final String UTF_8_CHARSET_NAME = "UTF-8";
     public static final String DEFAULT_CHECK_XML_FILE = "/home/tharindu/prepare-line-check/default-check-xml.xml";

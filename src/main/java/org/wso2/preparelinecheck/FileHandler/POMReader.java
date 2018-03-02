@@ -43,10 +43,11 @@ public class POMReader {
 
     /**
      * This method reads pom file as a model
-     * @param path  path of the pom.xml
-     * @return  org.apache.maven.model.Model Object corresponding to the pom.xml file given;
+     *
+     * @param path path of the pom.xml
+     * @return org.apache.maven.model.Model Object corresponding to the pom.xml file given;
      */
-    public static Model getPOMModel(String path) throws Exception{
+    public static Model getPOMModel(String path) throws Exception {
 
         File pomFile = new File(path + File.separator + Constants.POM_NAME);
         InputStreamReader reader;

@@ -46,8 +46,9 @@ public class POMNodeProcess {
 
     /**
      * Add a given Node and it's subtree to another POM file as an execution node under 'jacoco-maven-plugin' plugin
+     *
      * @param sourceNodeTree An XML node tree of a 'jacoco-maven-plugin' execution
-     * @param targetDOM POM file containing 'jacoco-maven-plugin' plugin
+     * @param targetDOM      POM file containing 'jacoco-maven-plugin' plugin
      * @throws Exception DOMException
      */
     public static void addJacocoExecution(String sourceNodeTree, String targetDOM, String COVERAGE_THRESHOLD, String coveragePerParameter) throws Exception {
@@ -93,20 +94,21 @@ public class POMNodeProcess {
     /**
      * traverse through a DOM and return the executions node of the Jacoco plugin
      * Note: Handle exceptions
+     *
      * @param xml DOM file
      * @return executions node in Jacoco plugin
      */
-    private static Node getJacocoPluginExecutionsElement(Document xml) throws DOMException{
+    private static Node getJacocoPluginExecutionsElement(Document xml) throws DOMException {
         //Get a list of plugin nodes
         NodeList plugins = xml.getElementsByTagName(Constants.MAVEN_TAG_PLUGIN);
 
         //Find Jacoco plugin by traversing through all available plugins
-        for(int i = 0; i < plugins.getLength(); i++){
+        for (int i = 0; i < plugins.getLength(); i++) {
             Element pluginElement = (Element) plugins.item(i);
             String artifactId = pluginElement.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0).getTextContent(); // Exception is thrown when no value is present
 
             //Check for Jacoco maven plugin using artifactId value
-            if(artifactId.equals(Constants.JACOCO_MAVEN_PLUGIN)){
+            if (artifactId.equals(Constants.JACOCO_MAVEN_PLUGIN)) {
                 return pluginElement.getElementsByTagName(Constants.MAVEN_TAG_EXECUTIONS).item(0);
             }
         }
@@ -116,10 +118,12 @@ public class POMNodeProcess {
 
     /**
      * print a given DOM file on console
+     *
      * @param xml DOM
      * @throws Exception
      */
     public static final void prettyPrint(Document xml) throws Exception {
+
         Transformer tf = TransformerFactory.newInstance().newTransformer();
         tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
