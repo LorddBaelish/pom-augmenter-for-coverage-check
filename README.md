@@ -2,13 +2,13 @@
 
 **pom-augmenter-for-coverage-check** is a automated command line application to analyze a maven project's POM files to add ***jacoco line coverage check rule*** if **jacoco-prepare-agent** is invoked in any of the parent or child pom file.
 
-##Getting Started
-###Restrictions
+## Getting Started ##
+### Restrictions ###
 This application will search for an execution with **prepare-agent** goal in **jacoco-maven-plugin** and adds **default-check**  goal with the required line coverage threshold.
 As the application starts with the parent POM, all the child modules should be included under the `<modules>` tag.
-###Prerequisites
+### Prerequisites ###
 JRE for java 8
-###Usage
+### Usage ###
 Run compiled jar file in the target folder.
 
 ```bash
