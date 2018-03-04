@@ -19,118 +19,119 @@
 
 package org.wso2.preparelinecheck.POMProcessor;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.StringWriter;
-import java.io.Writer;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.wso2.preparelinecheck.Constants;
+import org.xml.sax.SAXException;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 /**
- * contains methods to process xml files
+ * contains methods to process pom/xml files
  */
 public class POMNodeProcess {
 
+    public static final Log log = LogFactory.getLog(POMNodeProcess.class);
+
     /**
-     * Add a given Node and it's subtree to another POM file as an execution node under 'jacoco-maven-plugin' plugin
+     * Copy a given Node and it's subtree to a target POM file as an execution node under 'jacoco-maven-plugin' plugin
      *
-     * @param sourceNodeTree An XML node tree of a 'jacoco-maven-plugin' execution
+     * @param sourceNodeTree An XML file path containing a node tree of a 'jacoco-maven-plugin' execution
      * @param targetDOM      POM file containing 'jacoco-maven-plugin' plugin
      * @throws Exception DOMException
      */
-    public static void addJacocoExecution(String sourceNodeTree, String targetDOM, String COVERAGE_THRESHOLD, String coveragePerParameter) throws Exception {
+    public static void appendJacocoExecutionNode(String sourceNodeTree, String targetDOM, String COVERAGE_THRESHOLD, String coveragePerParameter) {
 
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setValidating(false);
-        DocumentBuilder db = dbf.newDocumentBuilder();
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setValidating(false);
+            DocumentBuilder db = dbf.newDocumentBuilder();
 
-        //Parse two xml files
-        Document doc1 = db.parse(new FileInputStream(new File(sourceNodeTree)));
-        Document doc2 = db.parse(new FileInputStream(new File(targetDOM)));
+            //Parse two xml files
+            Document sourceXmlFile = db.parse(new FileInputStream(new File(sourceNodeTree)));
+            Document targetPomFile = db.parse(new FileInputStream(new File(targetDOM)));
 
-        //Add line coverage threshold
-        doc1.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(COVERAGE_THRESHOLD);
-        doc1.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerParameter);
+            //Set line coverage threshold and 'coverage per' parameter
+            sourceXmlFile.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_CHECK_VALUE).item(0).setTextContent(COVERAGE_THRESHOLD);
+            sourceXmlFile.getElementsByTagName(Constants.JACOCO_TAG_COVERAGE_PER_ELEMENT).item(0).setTextContent(coveragePerParameter);
 
-        //Print results to console
-        //prettyPrint(doc2);
+            //Root node of the source XML
+            Node sourceExecutionNode = sourceXmlFile.getDocumentElement();
 
-        //Root node of the source XML
-        Node sourceXmlRootNode = doc1.getDocumentElement();
+            //Import root node and all of it's elements from source to target pom file
+            Node importedExecutionNode = targetPomFile.importNode(sourceExecutionNode, true);
 
-        //Import root node and all of it's elements from source to target DOM
-        Node apendingNode = doc2.importNode(sourceXmlRootNode, true);
+            //Find the Node named as executions under Jacoco plugin
+            Node parentExecutionsNode = getJacocoPluginNodeExecutions(targetPomFile);
 
-        //Find the Node named as executions under Jacoco plugin
-        Node executionsNode = getJacocoPluginExecutionsElement(doc2);
+            //Append root node and it's tree to parentExecutionsNode
+            parentExecutionsNode.appendChild(importedExecutionNode);
 
-        //Append root node and it's tree to executionsNode
-        executionsNode.appendChild(apendingNode);
+            //Write back modified POM
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(targetPomFile);
+            StreamResult result = new StreamResult(new File(targetDOM));
+            transformer.transform(source, result);
+        } catch (ParserConfigurationException e) {
+            log.error("Error creating xml parser");
+            e.printStackTrace();
+        } catch (IOException e) {
+            log.error("Error reading xml files");
+            e.printStackTrace();
+        } catch (SAXException e) {
+            log.error("Error parsing xml files");
+            e.printStackTrace();
+        } catch (TransformerConfigurationException e) {
+            log.error("Error while configuring writing to pom step");
+            e.printStackTrace();
+        } catch (TransformerException e) {
+            log.error("Error while writing to pom");
+            e.printStackTrace();
+        }
 
-        //Print results to console
-        //prettyPrint(doc2);
-
-        //Write back modified POM
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        DOMSource source = new DOMSource(doc2);
-        StreamResult result = new StreamResult(new File(targetDOM));
-        transformer.transform(source, result);
     }
 
     /**
-     * traverse through a DOM and return the executions node of the Jacoco plugin
-     * Note: Handle exceptions
+     * Traverse through a DOM and return the parent executions node of the Jacoco plugin
      *
      * @param xml DOM file
      * @return executions node in Jacoco plugin
      */
-    private static Node getJacocoPluginExecutionsElement(Document xml) throws DOMException {
+    private static Node getJacocoPluginNodeExecutions(Document xml) throws DOMException {
         //Get a list of plugin nodes
         NodeList plugins = xml.getElementsByTagName(Constants.MAVEN_TAG_PLUGIN);
 
         //Find Jacoco plugin by traversing through all available plugins
         for (int i = 0; i < plugins.getLength(); i++) {
-            Element pluginElement = (Element) plugins.item(i);
-            String artifactId = pluginElement.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0).getTextContent(); // Exception is thrown when no value is present
+            Element pluginNode = (Element) plugins.item(i);
 
-            //Check for Jacoco maven plugin using artifactId value
+            //Grab 'artifactId' value from the plugin Node
+            String artifactId = pluginNode.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0).getTextContent(); // Exception is thrown when no value is present
+
+            //Check for Jacoco maven plugin using the retrieved artifactId value
             if (artifactId.equals(Constants.JACOCO_MAVEN_PLUGIN)) {
-                return pluginElement.getElementsByTagName(Constants.MAVEN_TAG_EXECUTIONS).item(0);
+                //Return the Node 'Executions' from the jacoco plugin node
+                return pluginNode.getElementsByTagName(Constants.MAVEN_TAG_EXECUTIONS).item(0);
             }
         }
 
         return null;
     }
-
-    /**
-     * print a given DOM file on console
-     *
-     * @param xml DOM
-     * @throws Exception
-     */
-    public static final void prettyPrint(Document xml) throws Exception {
-
-        Transformer tf = TransformerFactory.newInstance().newTransformer();
-        tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        tf.setOutputProperty(OutputKeys.INDENT, "yes");
-        Writer out = new StringWriter();
-        tf.transform(new DOMSource(xml), new StreamResult(out));
-        System.out.println(out.toString());
-    }
-
 }

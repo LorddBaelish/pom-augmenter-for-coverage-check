@@ -22,19 +22,18 @@ package org.wso2.preparelinecheck;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.maven.model.Model;
-
 import org.wso2.preparelinecheck.FileHandler.POMReader;
 import org.wso2.preparelinecheck.POMProcessor.JacocoLineCoverage;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.io.File;
 
 /**
  * Contain main method for execution.
  * This application analyzes a given project directory to apply Jacoco line coverage threshold
  * This application start with the parent pom file and then move on to each submodule by analyzing pom files in each
- * If Jacoco prepare-agent execution is available in a POM file, line coverage check will be added if it is not already there
+ * If Jacoco prepare-agent execution is available in a POM file, line coverage check will be added if it does not exists
  */
 public class Application {
 
@@ -43,44 +42,41 @@ public class Application {
     /**
      * Main method
      *
-     * @param args Path to the project, line coverage threshold, coverage per parameter(per BUNDLE, per CLASS etc)
+     * @param args args[0]: Path to the project's directory containing parent pom
+     *             args[1]: Line coverage threshold
+     *             args[2]: Per which element this coverage check should be performed (per BUNDLE, per CLASS etc)
      */
     public static void main(String[] args) {
 
         try {
-            Model parentPomModel = POMReader.getPOMModel(args[0]);
+            Model parentPom = POMReader.getPOMModel(args[0]);
 
             //Analyze parent POM
             log.info("Analyzing parent pom");
-            JacocoLineCoverage.applyLineCoverageCheck(parentPomModel, args[1], args[2]);
+            JacocoLineCoverage.addLineCoverageRule(parentPom, args[1], args[2]);
 
-            //Load all child modules
-            List<String> childPomList = parentPomModel.getModules();
+            //List all child modules under <modules> tag
+            List<String> subModulePaths = parentPom.getModules();
 
             //Go through each child and analyze for line coverage
-            for (String eachModule : childPomList) {
+            for (String eachSubModulePath : subModulePaths) {
 
                 try {
-                    Model childPomModel = POMReader.getPOMModel(args[0] + File.separator + eachModule);
+                    Model childPom = POMReader.getPOMModel(args[0] + File.separator + eachSubModulePath);
 
-                    log.info("Analyzing " + eachModule);
-                    JacocoLineCoverage.applyLineCoverageCheck(childPomModel, args[1], args[2]);
+                    log.info("Analyzing " + eachSubModulePath);
+                    JacocoLineCoverage.addLineCoverageRule(childPom, args[1], args[2]);
 
                 } catch (FileNotFoundException e) {
                     log.warn("skipping this module. POM file not found");
 
-                } finally {
-                    continue;
                 }
             }
 
         } catch (FileNotFoundException e) {
             log.fatal("Cannot find the parent POM");
-        } catch (ArrayIndexOutOfBoundsException e){
+        } catch (ArrayIndexOutOfBoundsException e) {
             log.error("Invalid arguments");
-        } catch (Exception e) {
-            log.fatal("Error occurred while reading the parent pom");
-            e.printStackTrace();
         }
     }
 }

@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.wso2.preparelinecheck.Constants;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,23 +32,21 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import org.wso2.preparelinecheck.Constants;
-import org.wso2.preparelinecheck.Application;
-
 /**
  * Contains methods for reading a pom.xml file
  */
 public class POMReader {
 
-    private static final Log log = LogFactory.getLog(Application.class);
+    private static final Log log = LogFactory.getLog(POMReader.class);
 
     /**
      * This method reads pom file as a model
      *
      * @param path path of the pom.xml
      * @return org.apache.maven.model.Model Object corresponding to the pom.xml file given;
+     * @throws FileNotFoundException Unable to find the pom file
      */
-    public static Model getPOMModel(String path) throws Exception {
+    public static Model getPOMModel(String path) throws FileNotFoundException {
 
         File pomFile = new File(path + File.separator + Constants.POM_NAME);
         InputStreamReader reader;
@@ -58,19 +57,17 @@ public class POMReader {
             reader = new InputStreamReader(fileStream, Constants.UTF_8_CHARSET_NAME);
             model = mavenReader.read(reader);
             model.setPomFile(pomFile);
-
-            fileStream.close();
-            reader.close();
-
         } catch (FileNotFoundException e) {
-            //e.printStackTrace();
-            log.info("NO Pom Files found");
-            return model;
+            throw e;
         } catch (IOException e) {
+            log.error("IO error");
             e.printStackTrace();
+
         } catch (XmlPullParserException e) {
+            log.error("Error while parsing pom file");
             e.printStackTrace();
         }
+
         return model;
     }
 }

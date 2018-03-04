@@ -23,7 +23,7 @@ public class Constants {
 
     public static final String POM_NAME = "pom.xml";
     public static final String UTF_8_CHARSET_NAME = "UTF-8";
-    public static final String DEFAULT_CHECK_XML_FILE = "/home/tharindu/prepare-line-check/default-check-xml.xml";
+    public static final String JACOCO_NODE_COVERAGE_CHECK_RULE = "default-check-xml.xml";
     public static final String JACOCO_MAVEN_PLUGIN = "jacoco-maven-plugin";
     public static final String JACOCO_GOAL_AGENT_INVOKE = "prepare-agent";
     public static final String JACOCO_GOAL_COVERAGE_RULE_INVOKE = "check";
