@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
-import org.wso2.preparelinecheck.Application;
 import org.wso2.preparelinecheck.Constants;
 
 import java.io.File;
@@ -41,11 +40,11 @@ public class JacocoLineCoverage {
      * @param pomFile              org.apache.maven.model.Model object corresponding to the pom file
      * @param coverageThreshold    Jacoco line coverage threshold value to break the build
      * @param coveragePerParameter Per which element-wise coverage check should be applied [per BUNDLE, PACKAGE, CLASS, SOURCEFILE or METHOD]
-     * @return Boolean value for the condition: The pom file was modified or not
+     * @return Boolean value for the condition -> The pom file was modified or not
      */
     public static boolean addLineCoverageRule(Model pomFile, String coverageThreshold, String coveragePerParameter) {
 
-        final Log log = LogFactory.getLog(Application.class);
+        final Log log = LogFactory.getLog(JacocoLineCoverage.class);
 
         //Load all available plugins
         List<Plugin> plugins = pomFile.getBuild().getPlugins();
@@ -81,7 +80,7 @@ public class JacocoLineCoverage {
                     String targetXmlPath = pomFile.getProjectDirectory().getAbsolutePath() + File.separator + Constants.POM_NAME;
 
                     //Copy a node tree from a given xml and append it as a new Jacoco execution node in the target pom file
-                    POMNodeProcess.appendJacocoExecutionNode(Constants.JACOCO_NODE_COVERAGE_CHECK_RULE, targetXmlPath, coverageThreshold, coveragePerParameter);
+                    POMNodeProcess.appendJacocoCoverageCheckExecutionNode(Constants.JACOCO_NODE_COVERAGE_CHECK_RULE, targetXmlPath, coverageThreshold, coveragePerParameter);
 
                     return true;
 
@@ -91,6 +90,53 @@ public class JacocoLineCoverage {
                 }
                 else {
                     log.info("Skipping rule adding due to the default-check execution is already available");
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * To change the jacoco unit test report generation path to the default value({$project.build.directory}/jacoco.exec)
+     * This method search for <destFile> and <dataFile> nodes in the given pom file under jacoco plugin and modify them according to the input path parameter
+     *
+     * @param pomFile Name of the pom file model where the path set should be performed
+     * @return Truth value whether the path set procedure was performed or not
+     */
+    public static boolean setDefaultJacocoUTReportPath(Model pomFile){
+
+        final Log log = LogFactory.getLog(JacocoLineCoverage.class);
+
+        //Load all available plugins
+        List<Plugin> plugins = pomFile.getBuild().getPlugins();
+
+        boolean JACOCO_PREPARE_AGENT_AVAILABLE = false;
+
+        //Go through each plugin
+        for (Plugin plugin : plugins) {
+
+            //Check if jacoco maven plugin is present
+            if (plugin.getArtifactId().equals(Constants.JACOCO_PLUGIN_ARTIFACT_ID)) {
+
+                //Check if prepare-agent execution step is present
+                for (PluginExecution execution : plugin.getExecutions()) {
+                    if (execution.getGoals().contains(Constants.JACOCO_GOAL_AGENT_INVOKE)) {
+
+                        log.info("Jacoco_execution:prepare-agent is available");
+                        JACOCO_PREPARE_AGENT_AVAILABLE = true;
+                    }
+                }
+
+                //Check whether <destFile> node is present. Modify if available. Path already set to default if not
+                if (JACOCO_PREPARE_AGENT_AVAILABLE) {
+
+                    String targetXmlPath = pomFile.getProjectDirectory().getAbsolutePath() + File.separator + Constants.POM_NAME;
+                    return POMNodeProcess.setDefaultJacocoUTDestinationNode(targetXmlPath);
+                }
+                else {
+
+                    log.info("Jacoco execution prepare-agent has not invoked");
                 }
             }
         }

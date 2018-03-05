@@ -56,7 +56,7 @@ public class POMNodeProcess {
      * @param targetDOM      POM file containing 'jacoco-maven-plugin' plugin
      * @throws Exception DOMException
      */
-    public static void appendJacocoExecutionNode(String sourceNodeTree, String targetDOM, String COVERAGE_THRESHOLD, String coveragePerParameter) {
+    public static void appendJacocoCoverageCheckExecutionNode(String sourceNodeTree, String targetDOM, String COVERAGE_THRESHOLD, String coveragePerParameter) {
 
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -78,7 +78,7 @@ public class POMNodeProcess {
             Node importedExecutionNode = targetPomFile.importNode(sourceExecutionNode, true);
 
             //Find the Node named as executions under Jacoco plugin
-            Node parentExecutionsNode = getJacocoPluginNodeExecutions(targetPomFile);
+            Node parentExecutionsNode = getJacocoPluginExecutionsNode(targetPomFile);
 
             //Append root node and it's tree to parentExecutionsNode
             parentExecutionsNode.appendChild(importedExecutionNode);
@@ -89,18 +89,23 @@ public class POMNodeProcess {
             DOMSource source = new DOMSource(targetPomFile);
             StreamResult result = new StreamResult(new File(targetDOM));
             transformer.transform(source, result);
+
         } catch (ParserConfigurationException e) {
             log.error("Error creating xml parser");
             e.printStackTrace();
+
         } catch (IOException e) {
             log.error("Error reading xml files");
             e.printStackTrace();
+
         } catch (SAXException e) {
             log.error("Error parsing xml files");
             e.printStackTrace();
+
         } catch (TransformerConfigurationException e) {
-            log.error("Error while configuring writing to pom step");
+            log.error("Error while configuring pom writing step");
             e.printStackTrace();
+
         } catch (TransformerException e) {
             log.error("Error while writing to pom");
             e.printStackTrace();
@@ -114,7 +119,7 @@ public class POMNodeProcess {
      * @param xml DOM file
      * @return executions node in Jacoco plugin
      */
-    private static Node getJacocoPluginNodeExecutions(Document xml) throws DOMException {
+    private static Node getJacocoPluginExecutionsNode(Document xml) throws DOMException {
         //Get a list of plugin nodes
         NodeList plugins = xml.getElementsByTagName(Constants.MAVEN_TAG_PLUGIN);
 
@@ -133,5 +138,78 @@ public class POMNodeProcess {
         }
 
         return null;
+    }
+
+    public static boolean setDefaultJacocoUTDestinationNode(String targetDOM){
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setValidating(false);
+            DocumentBuilder db = dbf.newDocumentBuilder();
+
+            //Parse the xml file
+            Document targetPomFile = db.parse(new FileInputStream(new File(targetDOM)));
+
+            //Load all plugins
+            NodeList plugins = targetPomFile.getElementsByTagName(Constants.MAVEN_TAG_PLUGIN);
+
+            //Find Jacoco plugin by traversing through all items
+            for (int i=0; i<plugins.getLength(); i++){
+                Element pluginNode = (Element) plugins.item(i);
+
+                //Grab 'artifactId' value from the plugin Node
+                String artifactId = pluginNode.getElementsByTagName(Constants.MAVEN_TAG_ARTIFACT_ID).item(0).getTextContent(); // Exception is thrown when no value is present
+
+                //Check for Jacoco maven plugin using the retrieved artifactId value
+                if (artifactId.equals(Constants.JACOCO_MAVEN_PLUGIN)) {
+
+                    //Load all executions
+                    NodeList jacocoExecutions = targetPomFile.getElementsByTagName(Constants.MAVEN_TAG_EXECUTION);
+
+                    //Go through each execution
+                    for (int j=0; j<jacocoExecutions.getLength(); j++){
+                        Element jacocoExecution = (Element) jacocoExecutions.item(j);
+
+                        //Grab 'goal' value from the plugin Node
+                        String goal = jacocoExecution.getElementsByTagName(Constants.MAVEN_TAG_GOAL).item(0).getTextContent(); // Exception is thrown when no value is present
+
+                        //Check for 'prepare-agent' is present
+                        if(goal.equals(Constants.JACOCO_GOAL_AGENT_INVOKE)){
+
+                            //Get
+                            jacocoExecution.getElementsByTagName(Constants.JACOCO_TAG_REPORT_DEST);
+                        }
+                    }
+                    break;
+                }
+            }
+
+
+            //Write back modified POM
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(targetPomFile);
+            StreamResult result = new StreamResult(new File(targetDOM));
+            transformer.transform(source, result);
+
+        } catch (ParserConfigurationException e) {
+            log.error("Error creating xml parser");
+            e.printStackTrace();
+
+        } catch (IOException e) {
+            log.error("Error reading xml files");
+            e.printStackTrace();
+
+        } catch (SAXException e) {
+            log.error("Error parsing xml files");
+            e.printStackTrace();
+
+        } catch (TransformerConfigurationException e) {
+            log.error("Error while configuring pom writing step");
+            e.printStackTrace();
+
+        } catch (TransformerException e) {
+            log.error("Error while writing to pom");
+            e.printStackTrace();
+        }
     }
 }

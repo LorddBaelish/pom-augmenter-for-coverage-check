@@ -23,14 +23,18 @@ public class Constants {
 
     public static final String POM_NAME = "pom.xml";
     public static final String UTF_8_CHARSET_NAME = "UTF-8";
-    public static final String JACOCO_NODE_COVERAGE_CHECK_RULE = "default-check-xml.xml";
+    public static final String JACOCO_NODE_COVERAGE_CHECK_RULE = "jacoco-line-check-execution-node.xml";
     public static final String JACOCO_MAVEN_PLUGIN = "jacoco-maven-plugin";
     public static final String JACOCO_GOAL_AGENT_INVOKE = "prepare-agent";
     public static final String JACOCO_GOAL_COVERAGE_RULE_INVOKE = "check";
+    public static final String JACOCO_GOAL_REPORT = "report";
     public static final String JACOCO_PLUGIN_ARTIFACT_ID = "jacoco-maven-plugin";
     public static final String JACOCO_TAG_COVERAGE_CHECK_VALUE = "minimum";
     public static final String JACOCO_TAG_COVERAGE_PER_ELEMENT = "element";
+    public static final String JACOCO_TAG_REPORT_DEST = "destFile";
     public static final String MAVEN_TAG_PLUGIN = "plugin";
+    public static final String MAVEN_TAG_EXECUTION = "execution";
+    public static final String MAVEN_TAG_GOAL = "goal";
     public static final String MAVEN_TAG_ARTIFACT_ID = "artifactId";
     public static final String MAVEN_TAG_EXECUTIONS = "executions";
 
