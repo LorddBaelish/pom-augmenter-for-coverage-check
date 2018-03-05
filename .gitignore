@@ -1,1 +1,6 @@
-test-poms/*
+#To ignore all files recursively on following folders
+.idea
+target
+
+#To ignore files with following extensions
+*.iml
